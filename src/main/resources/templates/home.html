@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link th:href="@{/style.css}" rel="stylesheet" />
+
+    <script type="text/javascript" th:src="@{/script-shop.js}"></script>
+
+    <title>Welcome!</title>
+</head>
+<body>
+    <h1 th:inline="text">Welcome!</h1>
+
+    <div>
+        <p>Click button to see our products.</p>
+
+        <button type="button" th:onclick="showGreeting(greeting);">Continue</button>
+    </div>
+
+</body>
+</html>

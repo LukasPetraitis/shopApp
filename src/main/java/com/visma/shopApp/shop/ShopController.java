@@ -1,55 +1,69 @@
 package com.visma.shopApp.shop;
 
+import com.item.ItemDTO;
 import org.apache.tomcat.util.codec.binary.Base64;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.ModelAndView;
 
-@RestController
+import java.util.List;
+
+@Controller
 @RequestMapping("shop")
 public class ShopController {
 
-    RestTemplate restTemplate = new RestTemplate();
+    private RestTemplate restTemplate;
+    private final String warehouseUrl;
+    private final String authentication;
 
-    public ShopController() {
-        restTemplate = new RestTemplate();
+    public ShopController(@Value("${warehouse.url}") String warehouseUrl,
+                          @Value("${authentication}") String authentication) {
+        this.restTemplate = new RestTemplate();
+        this.warehouseUrl = warehouseUrl;
+        this.authentication = authentication;
     }
 
-    @GetMapping("/hello")
-    public ResponseEntity<String> getHello() {
-
-        String url = "http://127.0.0.1:8080/warehouseApp-0.0.1-SNAPSHOT/warehouse/hello";
-        //String result = restTemplate.getForObject(uri, String.class);
-
-        ResponseEntity<String> result = restTemplate.exchange(url, HttpMethod.GET, getAuthentication(), String.class);
-        return result;
+    @RequestMapping(method = RequestMethod.GET)
+    public String showItems(Model model) {
+        model.addAttribute("greeting", getItems());
+        return "home";
     }
 
     @GetMapping("/items")
-    public ResponseEntity<String> getItems(){
+    public List<ItemDTO> getItems(){
 
-        String url = "http://127.0.0.1:8080/warehouseApp-0.0.1-SNAPSHOT/warehouse/items";
+        String url = warehouseUrl + "warehouseApp-0.0.1-SNAPSHOT/warehouse/items";
+        System.out.println(url);
+        ResponseEntity<List<ItemDTO>> result = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                getAuthentication(),
+                new ParameterizedTypeReference<List<ItemDTO>>() {} );
 
-        ResponseEntity<String> result = restTemplate.exchange(url, HttpMethod.GET, getAuthentication(), String.class);
-
-        return result;
+        List<ItemDTO> items = result.getBody();
+        return items;
     }
 
-    @GetMapping("/items/{id}/sell")
-    public ResponseEntity<String> sellItem(@PathVariable int id){
-        String url = "http://127.0.0.1:8080/warehouseApp-0.0.1-SNAPSHOT/warehouse/Items/"+ id + "/sell";
+    @GetMapping("/items/{id}/sell/{amount}")
+    public ResponseEntity<String> sellItem(@PathVariable int id, @PathVariable int amount){
 
+        String url = warehouseUrl + "warehouseApp-0.0.1-SNAPSHOT/warehouse/items/"+ id + "/sell/" + amount;
         ResponseEntity<String> result = restTemplate.exchange(url, HttpMethod.GET, getAuthentication(), String.class);
 
         return result;
     }
 
     public HttpEntity<String> getAuthentication(){
-        String auth = "user:password";
-        byte[] authToBytes = auth.getBytes();
+
+        byte[] authToBytes = authentication.getBytes();
         byte[] base64Encode = Base64.encodeBase64(authToBytes);
         String authValue = new String(base64Encode);
 
